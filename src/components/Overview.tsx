@@ -32,7 +32,7 @@ export default function Overview({
   onUpdateScore,
   isEditable = false
 }: OverviewProps) {
-  const [editingScore, setEditingScore] = useState<{ score: ScoreData; metricName: string } | null>(null);
+  const [editingScore, setEditingScore] = useState<{ score: ScoreData; metric: Metric } | null>(null);
 
   const filteredRetailers = selectedRetailer === 'All Retailers' ? retailers : retailers.filter(r => r.name === selectedRetailer);
   const filteredMetrics = selectedStoreType === 'All' ? metrics : metrics.filter(m => m.storeType === selectedStoreType);
@@ -40,8 +40,8 @@ export default function Overview({
   const onlineMetrics = filteredMetrics.filter(m => m.storeType === 'ONLINE');
   const inStoreMetrics = filteredMetrics.filter(m => m.storeType === 'IN-STORE');
 
-  const handleScoreClick = (score: ScoreData, metricName: string) => {
-    setEditingScore({ score, metricName });
+  const handleScoreClick = (score: ScoreData, metric: Metric) => {
+    setEditingScore({ score, metric });
   };
 
   const handleSaveEdit = (updatedScore: ScoreData) => {
@@ -76,8 +76,8 @@ export default function Overview({
                   {scoreData ? (
                     <ScoreBubble 
                       scoreData={scoreData} 
-                      metricName={metric.category} 
-                      onClick={() => handleScoreClick(scoreData, metric.category)}
+                      metric={metric} 
+                      onClick={() => handleScoreClick(scoreData, metric)}
                       isEditable={isEditable}
                     />
                   ) : (
@@ -268,7 +268,7 @@ export default function Overview({
         {editingScore && (
           <EditScoreModal 
             score={editingScore.score} 
-            metricName={editingScore.metricName} 
+            metric={editingScore.metric} 
             onClose={() => setEditingScore(null)}
             onSave={handleSaveEdit}
             isEditable={isEditable}
@@ -305,8 +305,17 @@ function TooltipWrapper({ children, content }: { children: React.ReactNode, cont
   );
 }
 
-function ScoreBubble({ scoreData, metricName, onClick, isEditable }: { scoreData: ScoreData, metricName: string, onClick: () => void, isEditable: boolean }) {
+function ScoreBubble({ scoreData, metric, onClick, isEditable }: { scoreData: ScoreData, metric: Metric, onClick: () => void, isEditable: boolean }) {
   const [showTooltip, setShowTooltip] = useState(false);
+
+  const isYesNo = metric.criteria === 'Yes = Green';
+  const isRating = metric.category === 'Ratings & Reviews';
+
+  const displayValue = isYesNo 
+    ? (scoreData.score >= 80 ? 'Yes' : 'No')
+    : isRating 
+      ? (scoreData.score / 20).toFixed(1)
+      : scoreData.score;
 
   return (
     <div className="relative flex items-center justify-center gap-2">
@@ -321,7 +330,7 @@ function ScoreBubble({ scoreData, metricName, onClick, isEditable }: { scoreData
       >
         <Edit3 size={10} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
       </button>
-      <span className="text-sm font-medium">{scoreData.score}</span>
+      <span className="text-sm font-medium">{displayValue}</span>
 
       <AnimatePresence>
         {showTooltip && (
@@ -331,11 +340,11 @@ function ScoreBubble({ scoreData, metricName, onClick, isEditable }: { scoreData
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             className="absolute bottom-full mb-2 w-48 p-3 bg-popover border rounded-lg shadow-xl z-50 text-left pointer-events-none"
           >
-            <h4 className="text-xs font-bold border-b pb-1 mb-2">{metricName}</h4>
+            <h4 className="text-xs font-bold border-b pb-1 mb-2">{metric.category}</h4>
             <div className="space-y-1">
               <p className="text-xs flex justify-between">
-                <span className="text-muted-foreground">Score:</span>
-                <span className="font-bold">{scoreData.score}</span>
+                <span className="text-muted-foreground">Value:</span>
+                <span className="font-bold">{displayValue}</span>
               </p>
               <p className="text-[10px] text-muted-foreground leading-tight mt-2">
                 {scoreData.comments}
@@ -349,9 +358,20 @@ function ScoreBubble({ scoreData, metricName, onClick, isEditable }: { scoreData
   );
 }
 
-function EditScoreModal({ score, metricName, onClose, onSave, isEditable }: { score: ScoreData, metricName: string, onClose: () => void, onSave: (score: ScoreData) => void, isEditable: boolean }) {
+function EditScoreModal({ score, metric, onClose, onSave, isEditable }: { score: ScoreData, metric: Metric, onClose: () => void, onSave: (score: ScoreData) => void, isEditable: boolean }) {
+  const isYesNo = metric.criteria === 'Yes = Green';
+  const isRating = metric.category === 'Ratings & Reviews';
+
   const [value, setValue] = useState(score.score);
   const [comment, setComment] = useState(score.comments);
+
+  const handleYesNoChange = (val: 'Yes' | 'No') => {
+    setValue(val === 'Yes' ? 100 : 0);
+  };
+
+  const handleRatingChange = (val: number) => {
+    setValue(val * 20);
+  };
 
   return (
     <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
@@ -368,7 +388,7 @@ function EditScoreModal({ score, metricName, onClose, onSave, isEditable }: { sc
             </div>
             <div>
               <h2 className="text-lg font-bold">Edit {isEditable ? 'Score & Comment' : 'Comment'}</h2>
-              <p className="text-xs text-muted-foreground">{metricName}</p>
+              <p className="text-xs text-muted-foreground">{metric.category}</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-accent rounded-full transition-colors">
@@ -377,54 +397,82 @@ function EditScoreModal({ score, metricName, onClose, onSave, isEditable }: { sc
         </div>
 
         <div className="p-6 space-y-6">
-         <div className={cn("space-y-2", !isEditable && "opacity-60 pointer-events-none")}>
-  <label className="text-sm font-bold flex items-center justify-between">
-    Performance Score (0-100)
-    {!isEditable && (
-      <span className="text-[10px] bg-muted px-2 py-0.5 rounded text-muted-foreground">
-        Admin Only
-      </span>
-    )}
-  </label>
-
-  <div className="flex items-center gap-3">
-    
-    {/* Range Slider */}
-    <input
-      type="range"
-      min="0"
-      max="100"
-      value={value}
-      onChange={(e) => setValue(Number(e.target.value))}
-      disabled={!isEditable}
-      className="flex-1 accent-primary"
-    />
-
-    {/* Text Input */}
-    <input
-      type="text"
-      min="0"
-      max="100"
-      value={value}
-      onChange={(e) =>
-        setValue(Math.min(100, Math.max(0, Number(e.target.value))))
-      }
-      disabled={!isEditable}
-      className="w-14 px-2 py-1 border rounded-md text-center text-sm font-semibold"
-    />
-
-    {/* Score Bubble */}
-    <span
-      className={cn(
-        "w-8 h-8 rounded-full flex items-center justify-center font-black text-xs shadow-inner",
-        getBubbleColor(value),
-        "text-white"
-      )}
-    >
-      {value}
-    </span>
-  </div>
-</div>
+          <div className={cn("space-y-2", !isEditable && "opacity-60 pointer-events-none")}>
+            <label className="text-sm font-bold flex items-center justify-between">
+              {isYesNo ? 'Status' : isRating ? 'Rating (1-5)' : 'Performance Score (0-100)'}
+              {!isEditable && <span className="text-[10px] bg-muted px-2 py-0.5 rounded text-muted-foreground">Admin Only</span>}
+            </label>
+            
+            {isYesNo ? (
+              <div className="flex gap-2">
+                {(['Yes', 'No'] as const).map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => handleYesNoChange(option)}
+                    className={cn(
+                      "flex-1 py-3 rounded-xl font-bold border-2 transition-all",
+                      (option === 'Yes' ? value >= 80 : value < 80)
+                        ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20"
+                        : "bg-background border-border hover:border-primary/50"
+                    )}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            ) : isRating ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <input
+                    type="range"
+                    min="1"
+                    max="5"
+                    step="0.1"
+                    value={value / 20}
+                    onChange={(e) => setValue(Number(e.target.value) * 20)}
+                    disabled={!isEditable}
+                    className="flex-1 accent-primary"
+                  />
+                  <input
+                    type="number"
+                    min="1"
+                    max="5"
+                    step="0.1"
+                    value={Number((value / 20).toFixed(1))}
+                    onChange={(e) => setValue(Number(e.target.value) * 20)}
+                    disabled={!isEditable}
+                    className="w-20 px-3 py-2 bg-background border rounded-xl font-bold text-center focus:ring-2 focus:ring-primary outline-none"
+                  />
+                </div>
+                <div className="flex justify-between px-1 text-[10px] text-muted-foreground font-bold">
+                  <span>1.0</span>
+                  <span>2.0</span>
+                  <span>3.0</span>
+                  <span>4.0</span>
+                  <span>5.0</span>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-4">
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={value}
+                  onChange={(e) => setValue(Number(e.target.value))}
+                  disabled={!isEditable}
+                  className="flex-1 accent-primary"
+                />
+                <span className={cn(
+                  "w-12 h-12 rounded-xl flex items-center justify-center font-black text-lg shadow-inner",
+                  getBubbleColor(value),
+                  "text-white"
+                )}>
+                  {value}
+                </span>
+              </div>
+            )}
+          </div>
 
           <div className="space-y-2">
             <label className="text-sm font-bold">Analyst Comments</label>

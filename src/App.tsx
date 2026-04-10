@@ -9,7 +9,7 @@ import UserManual from './components/UserManual';
 import Feedback from './components/Feedback';
 import AiInsightsModal from './components/AiInsightsModal';
 import { UserProfile, Metric, Retailer, ScoreData, Role } from './types';
-import { DEFAULT_METRICS, DEFAULT_RETAILERS } from './constants';
+import { DEFAULT_METRICS, DEFAULT_RETAILERS, REGION_RETAILERS } from './constants';
 import { MOCK_SCORES } from './mockData';
 import { motion, AnimatePresence } from 'motion/react';
 import { Loader2, LogIn, Shield, User as UserIcon, LayoutDashboard, Sparkles } from 'lucide-react';
@@ -39,7 +39,22 @@ export default function App() {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [scores, setScores] = useState<ScoreData[]>(() => {
     const saved = localStorage.getItem('omnicx_scores');
-    return saved ? JSON.parse(saved) : MOCK_SCORES;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        // Migration: If data is old (missing EMEA or has different retailers), reset it
+        const hasEMEA = parsed.some((s: any) => s.region === 'EMEA');
+        const hasTarget = parsed.some((s: any) => s.retailerId === 'target-us');
+        if (!hasEMEA || !hasTarget) {
+          localStorage.removeItem('omnicx_scores');
+          return MOCK_SCORES;
+        }
+        return parsed;
+      } catch (e) {
+        return MOCK_SCORES;
+      }
+    }
+    return MOCK_SCORES;
   });
   const [users, setUsers] = useState<UserProfile[]>(() => {
     const saved = localStorage.getItem('omnicx_users');
@@ -70,8 +85,9 @@ export default function App() {
     retailerId: '',
   });
 
-  const retailers = useMemo(() => DEFAULT_RETAILERS.map(r => r.name), []);
-  const regions = ['North America', 'Europe', 'Asia Pacific'];
+  const currentRetailers = useMemo(() => REGION_RETAILERS[filters.region] || [], [filters.region]);
+  const retailers = useMemo(() => currentRetailers.map(r => r.name), [currentRetailers]);
+  const regions = useMemo(() => Object.keys(REGION_RETAILERS), []);
   const dates = useMemo(() => Array.from(new Set(scores.map(s => s.date))).sort().reverse(), [scores]);
   const storeTypes = ['All', 'ONLINE', 'IN-STORE'];
 
@@ -145,6 +161,14 @@ export default function App() {
 
   const handleRemoveUser = (uid: string) => {
     setUsers(prev => prev.filter(u => u.uid !== uid));
+  };
+
+  const handleResetData = () => {
+    if (window.confirm('Are you sure you want to reset all data to defaults? This will clear all your changes.')) {
+      setScores(MOCK_SCORES);
+      localStorage.removeItem('omnicx_scores');
+      window.location.reload();
+    }
   };
 
   const isAdmin = user?.role === 'admin';
@@ -309,8 +333,8 @@ export default function App() {
                             </div> */}
                             <Overview
                               metrics={DEFAULT_METRICS}
-                              retailers={DEFAULT_RETAILERS}
-                              scores={scores.filter(s => s.date === filters.date)}
+                              retailers={currentRetailers}
+                              scores={scores.filter(s => s.date === filters.date && s.region === filters.region)}
                               selectedRetailer={filters.retailer}
                               selectedStoreType={filters.storeType}
                               onOpenAiInsights={(storeType, retailerId) => setAiInsights({ isOpen: true, storeType, retailerId })}
@@ -324,10 +348,12 @@ export default function App() {
                         {activePage === 'admin' && isAdmin && (
                           <AdminPage
                             metrics={DEFAULT_METRICS}
-                            retailers={DEFAULT_RETAILERS}
+                            retailers={currentRetailers}
                             scores={scores}
                             onUpdateScore={handleUpdateScore}
                             onAddDate={handleAddDate}
+                            currentRegion={filters.region}
+                            onResetData={handleResetData}
                           />
                         )}
 
@@ -353,8 +379,8 @@ export default function App() {
                 storeType={aiInsights.storeType}
                 retailerId={aiInsights.retailerId}
                 metrics={DEFAULT_METRICS}
-                retailers={DEFAULT_RETAILERS}
-                scores={scores.filter(s => s.date === filters.date)}
+                retailers={currentRetailers}
+                scores={scores.filter(s => s.date === filters.date && s.region === filters.region)}
               />
             </motion.div>
           )}

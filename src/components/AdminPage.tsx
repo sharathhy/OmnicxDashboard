@@ -10,9 +10,11 @@ interface AdminPageProps {
   scores: ScoreData[];
   onUpdateScore: (score: ScoreData) => void;
   onAddDate: (date: string) => void;
+  currentRegion: string;
+  onResetData: () => void;
 }
 
-export default function AdminPage({ metrics, retailers, scores, onUpdateScore, onAddDate }: AdminPageProps) {
+export default function AdminPage({ metrics, retailers, scores, onUpdateScore, onAddDate, currentRegion, onResetData }: AdminPageProps) {
   const [editingScore, setEditingScore] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<number>(0);
   const [editComment, setEditComment] = useState<string>('');
@@ -35,28 +37,31 @@ export default function AdminPage({ metrics, retailers, scores, onUpdateScore, o
     comment: ''
   });
 
-const filteredScores = useMemo(() => {
-  return scores.filter((score) => {
-    const metric = metrics.find((m) => m.id === score.metricId);
-    const retailer = retailers.find((r) => r.id === score.retailerId);
-
-    const metricValue = (metric?.category || "").toLowerCase();
-    const retailerValue = (retailer?.name || "").toLowerCase();
-    const dateValue = (score.date || "").toLowerCase();
-    const regionValue = (score.region ?? "").toLowerCase();
-    const scoreValue = score.score?.toString() || "";
-    const commentValue = (score.comments || "").toLowerCase();
-
-    return (
-      metricValue.includes(filters.metric.trim().toLowerCase()) &&
-      retailerValue.includes(filters.retailer.trim().toLowerCase()) &&
-      dateValue.includes(filters.date.trim().toLowerCase()) &&
-      regionValue.includes(filters.region.trim().toLowerCase()) &&
-      scoreValue.includes(filters.score.trim()) &&
-      commentValue.includes(filters.comment.trim().toLowerCase())
-    );
+  const filteredScores = scores.filter(score => {
+    const metric = metrics.find(m => m.id === score.metricId);
+    const retailer = retailers.find(r => r.id === score.retailerId);
+    
+    const metricMatch = !filters.metric || 
+      (metric?.category || '').toLowerCase().includes(filters.metric.toLowerCase()) ||
+      (metric?.storeType || '').toLowerCase().includes(filters.metric.toLowerCase());
+      
+    const retailerMatch = !filters.retailer || 
+      (retailer?.name || '').toLowerCase().includes(filters.retailer.toLowerCase());
+      
+    const dateMatch = !filters.date || 
+      (score.date || '').includes(filters.date);
+      
+    const regionMatch = !filters.region || 
+      (score.region || '').toLowerCase().includes(filters.region.toLowerCase());
+      
+    const scoreMatch = !filters.score || 
+      (score.score?.toString() || '').includes(filters.score);
+      
+    const commentMatch = !filters.comment || 
+      (score.comments || '').toLowerCase().includes(filters.comment.toLowerCase());
+    
+    return metricMatch && retailerMatch && dateMatch && regionMatch && scoreMatch && commentMatch;
   });
-}, [scores, metrics, retailers, filters]);
 
   const handleEdit = (score: ScoreData) => {
     setEditingScore(`${score.metricId}-${score.retailerId}-${score.date}-${score.region}`);
@@ -129,7 +134,7 @@ const filteredScores = useMemo(() => {
           <Overview
             metrics={metrics}
             retailers={retailers}
-            scores={scores.filter(s => s.date === activeNewDate)}
+            scores={scores.filter(s => s.date === activeNewDate && s.region === currentRegion)}
             selectedRetailer="All Retailers"
             selectedStoreType="All"
             onOpenAiInsights={() => {}}
@@ -174,6 +179,25 @@ const filteredScores = useMemo(() => {
         <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
           <div className="p-6 border-b bg-muted/30">
             <h3 className="font-bold">Metric Scores Management</h3>
+            <div className="flex items-center gap-3">
+              {Object.values(filters).some(v => v !== '') && (
+                <button 
+                  onClick={() => setFilters({ metric: '', retailer: '', date: '', region: '', score: '', comment: '' })}
+                  className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
+                >
+                  <X size={14} />
+                  Clear Filters
+                </button>
+              )}
+              <div className="w-px h-4 bg-border mx-1" />
+              <button 
+                onClick={onResetData}
+                className="text-xs font-bold text-red-500 hover:underline flex items-center gap-1"
+              >
+                <Trash2 size={14} />
+                Reset Data
+              </button>
+            </div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
@@ -261,21 +285,55 @@ const filteredScores = useMemo(() => {
                   const isEditing = editingScore === `${score.metricId}-${score.retailerId}-${score.date}-${score.region}`;
 
                   return (
-                    <tr key={`${score.metricId}-${score.retailerId}-${score.date}-${score.region || "no-region"}-${Math.random()}`} className="hover:bg-accent/50 transition-colors">
+                    <tr key={`${score.metricId}-${score.retailerId}-${score.date}-${score.region}`} className="hover:bg-accent/50 transition-colors">
                       <td className="p-4 text-sm font-medium">{metric?.category}</td>
                       <td className="p-4 text-sm">{retailer?.name}</td>
                       <td className="p-4 text-sm font-mono text-muted-foreground">{score.date}</td>
                       <td className="p-4 text-sm font-medium">{score.region}</td>
                       <td className="p-4 text-sm">
                         {isEditing ? (
-                          <input
-                            type="number"
-                            min="0"
-                            max="100"
-                            value={editValue}
-                            onChange={(e) => setEditValue(Number(e.target.value))}
-                            className="w-20 px-2 py-1 border rounded bg-background"
-                          />
+                          <div className="flex flex-col gap-2">
+                            {metric?.criteria === 'Yes = Green' ? (
+                              <div className="flex gap-1">
+                                {(['Yes', 'No'] as const).map(opt => (
+                                  <button
+                                    key={opt}
+                                    onClick={() => setEditValue(opt === 'Yes' ? 100 : 0)}
+                                    className={cn(
+                                      "px-2 py-1 text-[10px] font-bold border rounded transition-colors",
+                                      (opt === 'Yes' ? editValue >= 80 : editValue < 80)
+                                        ? "bg-primary text-primary-foreground border-primary"
+                                        : "bg-background border-border hover:border-primary/50"
+                                    )}
+                                  >
+                                    {opt}
+                                  </button>
+                                ))}
+                              </div>
+                            ) : metric?.category === 'Ratings & Reviews' ? (
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="number"
+                                  min="1"
+                                  max="5"
+                                  step="0.1"
+                                  value={Number((editValue / 20).toFixed(1))}
+                                  onChange={(e) => setEditValue(Number(e.target.value) * 20)}
+                                  className="w-16 px-2 py-1 border rounded bg-background text-xs font-bold"
+                                />
+                                <span className="text-[10px] text-muted-foreground">/ 5</span>
+                              </div>
+                            ) : (
+                              <input
+                                type="number"
+                                min="0"
+                                max="100"
+                                value={editValue}
+                                onChange={(e) => setEditValue(Number(e.target.value))}
+                                className="w-20 px-2 py-1 border rounded bg-background"
+                              />
+                            )}
+                          </div>
                         ) : (
                           <span className={cn(
                             "px-2 py-1 rounded-full text-xs font-bold",
@@ -283,7 +341,12 @@ const filteredScores = useMemo(() => {
                             score.score >= 60 ? "bg-yellow-100 text-yellow-700" :
                             "bg-red-100 text-red-700"
                           )}>
-                            {score.score}
+                            {metric?.criteria === 'Yes = Green' 
+                              ? (score.score >= 80 ? 'Yes' : 'No')
+                              : metric?.category === 'Ratings & Reviews'
+                                ? (score.score / 20).toFixed(1)
+                                : score.score
+                            }
                           </span>
                         )}
                       </td>

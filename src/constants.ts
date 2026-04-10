@@ -20,13 +20,32 @@ export const DEFAULT_METRICS: Metric[] = [
   { id: '13', category: 'RDX Dwell Time', description: 'RDX average dwell time per device', criteria: '75-110 = Green', storeType: 'IN-STORE' },
 ];
 
-export const DEFAULT_RETAILERS: Retailer[] = [
+export const REGION_RETAILERS: Record<string, Retailer[]> = {
+  'North America': [
+    { id: 'bestbuy-us', name: 'BEST BUY US', logoUrl: bestbuyLogo },
+    { id: 'amazon-us', name: 'AMAZON US', logoUrl: amazonLogo },
+    { id: 'walmart-us', name: 'WALMART US', logoUrl: walmartLogo },
+    { id: 'costco-us', name: 'COSTCO US', logoUrl: costcoLogo },
+    { id: 'best-buy-ca', name: 'BEST BUY CA', logoUrl: bestbuyLogo }, 
+  ],
+  'EMEA': [
   { id: 'bestbuy-us', name: 'BEST BUY US', logoUrl: bestbuyLogo },
-  { id: 'bestbuy-ca', name: 'BEST BUY CA', logoUrl: bestbuyLogo },
-  { id: 'amazon-us', name: 'AMAZON US', logoUrl: amazonLogo },
-  { id: 'walmart-us', name: 'WALMART US', logoUrl: walmartLogo },
-  { id: 'costco-us', name: 'COSTCO US', logoUrl: costcoLogo },
-];
+    { id: 'amazon-us', name: 'AMAZON US', logoUrl: amazonLogo },
+    { id: 'walmart-us', name: 'WALMART US', logoUrl: walmartLogo },
+    { id: 'costco-us', name: 'COSTCO US', logoUrl: costcoLogo },
+    { id: 'best-buy-ca', name: 'BEST BUY CA', logoUrl: bestbuyLogo }, 
+  ],
+  'Asia Pacific': [
+   { id: 'bestbuy-us', name: 'BEST BUY US', logoUrl: bestbuyLogo },
+    { id: 'amazon-us', name: 'AMAZON US', logoUrl: amazonLogo },
+    { id: 'walmart-us', name: 'WALMART US', logoUrl: walmartLogo },
+    { id: 'costco-us', name: 'COSTCO US', logoUrl: costcoLogo },
+    { id: 'best-buy-ca', name: 'BEST BUY CA', logoUrl: bestbuyLogo }, 
+  ]
+};
+
+export const DEFAULT_RETAILERS: Retailer[] = Object.values(REGION_RETAILERS).flat();
+
 
 export const THRESHOLDS = {
   GOOD: 80,
