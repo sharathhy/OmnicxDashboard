@@ -3,6 +3,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { Sun, Moon, ChevronDown, Menu, Filter, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
+import microsoft from '../../public/microsoft.png';
 
 interface HeaderProps {
   retailers: string[];
@@ -37,7 +38,7 @@ export default function Header({ retailers, regions, dates, storeTypes, filters,
           {/* <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-bold">
             O
           </div> */}
-          <img src="/microsoft.png" alt="OmniCx Logo" className="w-8 h-8 " />
+          <img src={microsoft} alt="OmniCx Logo" className="w-8 h-8 " />
           <h1 className="text-xl font-bold tracking-tight">OmniCx Dashboard</h1>
         </div>
         <div className="flex items-center gap-2">
