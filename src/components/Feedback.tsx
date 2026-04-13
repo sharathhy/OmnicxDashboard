@@ -50,7 +50,7 @@ export default function Feedback() {
           >
             <div className="space-y-3">
               <label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">How would you rate your experience?</label>
-              <div className="flex justify-between gap-4">
+              <div className="flex justify-between gap-4 mt-2">
                 {[1, 2, 3, 4, 5].map((num) => (
                   <button
                     key={num}
@@ -69,13 +69,13 @@ export default function Feedback() {
             </div>
 
             <div className="space-y-3">
-              <label className="text-sm font-bold text-muted-foreground uppercase tracking-wider">What can we improve?</label>
+              <label className="text-sm font-bold text-muted-foreground uppercase tracking-wider ">What can we improve?</label>
               <textarea
                 required
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 placeholder="Share your thoughts, feature requests, or report issues..."
-                className="w-full h-40 p-4 bg-background border rounded-2xl text-sm focus:ring-2 focus:ring-primary outline-none resize-none"
+                className="w-full h-40 p-4 bg-background border rounded-2xl text-sm focus:ring-2 focus:ring-primary outline-none resize-none mt-2"
               />
             </div>
 

@@ -34,9 +34,20 @@ export default function App() {
     return saved ? JSON.parse(saved) : null;
   });
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [activePage, setActivePage] = useState('overview');
+  const [activePage, setActivePage] = useState(() => {
+    const saved = localStorage.getItem('omnicx_active_page');
+    return saved || 'overview';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('omnicx_active_page', activePage);
+  }, [activePage]);
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [metrics, setMetrics] = useState<Metric[]>(() => {
+    const saved = localStorage.getItem('omnicx_metrics');
+    return saved ? JSON.parse(saved) : DEFAULT_METRICS;
+  });
   const [scores, setScores] = useState<ScoreData[]>(() => {
     const saved = localStorage.getItem('omnicx_scores');
     if (saved) {
@@ -63,6 +74,10 @@ export default function App() {
       { uid: '2', email: CONSTANT_USERS.USER.email, displayName: CONSTANT_USERS.USER.displayName, role: 'user', createdAt: new Date().toISOString() },
     ];
   });
+
+  useEffect(() => {
+    localStorage.setItem('omnicx_metrics', JSON.stringify(metrics));
+  }, [metrics]);
 
   useEffect(() => {
     localStorage.setItem('omnicx_scores', JSON.stringify(scores));
@@ -130,9 +145,13 @@ export default function App() {
     ));
   };
 
+  const handleUpdateMetric = (updatedMetric: Metric) => {
+    setMetrics(prev => prev.map(m => m.id === updatedMetric.id ? updatedMetric : m));
+  };
+
   const handleAddDate = (date: string) => {
     const newScores: ScoreData[] = [];
-    DEFAULT_METRICS.forEach(metric => {
+    metrics.forEach(metric => {
       DEFAULT_RETAILERS.forEach(retailer => {
         newScores.push({
           id: Math.random().toString(36).substr(2, 9),
@@ -332,14 +351,15 @@ export default function App() {
                               </div>
                             </div> */}
                             <Overview
-                              metrics={DEFAULT_METRICS}
+                              metrics={metrics}
                               retailers={currentRetailers}
                               scores={scores.filter(s => s.date === filters.date && s.region === filters.region)}
                               selectedRetailer={filters.retailer}
                               selectedStoreType={filters.storeType}
                               onOpenAiInsights={(storeType, retailerId) => setAiInsights({ isOpen: true, storeType, retailerId })}
-                              onUpdateScore={handleUpdateScore}
                               onOpenOverallAiInsights={() => setAiInsights({ isOpen: true, storeType: 'All', retailerId: '' })}
+                              onUpdateScore={handleUpdateScore}
+                              onUpdateMetric={handleUpdateMetric}
                               isEditable={isAdmin}
                             />
                           </div>
@@ -347,10 +367,11 @@ export default function App() {
 
                         {activePage === 'admin' && isAdmin && (
                           <AdminPage
-                            metrics={DEFAULT_METRICS}
+                            metrics={metrics}
                             retailers={currentRetailers}
                             scores={scores}
                             onUpdateScore={handleUpdateScore}
+                            onUpdateMetric={handleUpdateMetric}
                             onAddDate={handleAddDate}
                             currentRegion={filters.region}
                             onResetData={handleResetData}
@@ -378,7 +399,7 @@ export default function App() {
                 onClose={() => setAiInsights({ ...aiInsights, isOpen: false })}
                 storeType={aiInsights.storeType}
                 retailerId={aiInsights.retailerId}
-                metrics={DEFAULT_METRICS}
+                metrics={metrics}
                 retailers={currentRetailers}
                 scores={scores.filter(s => s.date === filters.date && s.region === filters.region)}
               />

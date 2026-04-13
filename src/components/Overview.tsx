@@ -18,6 +18,7 @@ interface OverviewProps {
   onOpenAiInsights: (storeType: string, retailerId: string) => void;
   onOpenOverallAiInsights: () => void;
   onUpdateScore?: (score: ScoreData) => void;
+  onUpdateMetric?: (metric: Metric) => void;
   isEditable?: boolean;
 }
 
@@ -30,6 +31,7 @@ export default function Overview({
   onOpenAiInsights,
   onOpenOverallAiInsights,
   onUpdateScore,
+  onUpdateMetric,
   isEditable = false
 }: OverviewProps) {
   const [editingScore, setEditingScore] = useState<{ score: ScoreData; metric: Metric } | null>(null);
@@ -68,7 +70,19 @@ export default function Overview({
             )}
             <td className="p-4 text-sm font-medium">{metric.category}</td>
             <td className="p-4 text-sm text-muted-foreground">{metric.description}</td>
-            <td className="p-4 text-sm font-mono text-muted-foreground">{metric.criteria}</td>
+            <td className="p-4 text-sm font-mono text-muted-foreground">
+              {isEditable ? (
+                <input
+                  type="text"
+                  value={metric.criteria}
+                  onChange={(e) => onUpdateMetric?.({ ...metric, criteria: e.target.value })}
+                  className="bg-transparent border-b border-transparent hover:border-primary/30 focus:border-primary outline-none w-full transition-colors font-mono"
+                  placeholder="Edit criteria..."
+                />
+              ) : (
+                metric.criteria
+              )}
+            </td>
             {filteredRetailers.map(retailer => {
               const scoreData = scores.find(s => s.metricId === metric.id && s.retailerId === retailer.id);
               return (

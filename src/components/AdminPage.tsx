@@ -9,12 +9,13 @@ interface AdminPageProps {
   retailers: Retailer[];
   scores: ScoreData[];
   onUpdateScore: (score: ScoreData) => void;
+  onUpdateMetric: (metric: Metric) => void;
   onAddDate: (date: string) => void;
   currentRegion: string;
   onResetData: () => void;
 }
 
-export default function AdminPage({ metrics, retailers, scores, onUpdateScore, onAddDate, currentRegion, onResetData }: AdminPageProps) {
+export default function AdminPage({ metrics, retailers, scores, onUpdateScore, onUpdateMetric, onAddDate, currentRegion, onResetData }: AdminPageProps) {
   const [editingScore, setEditingScore] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<number>(0);
   const [editComment, setEditComment] = useState<string>('');
@@ -139,6 +140,7 @@ export default function AdminPage({ metrics, retailers, scores, onUpdateScore, o
             selectedStoreType="All"
             onOpenAiInsights={() => {}}
             onUpdateScore={onUpdateScore}
+            onUpdateMetric={onUpdateMetric}
             isEditable={true}
              onOpenOverallAiInsights={() => setAiInsights({ isOpen: true, storeType: 'All', retailerId: '' })}
           />
@@ -190,13 +192,13 @@ export default function AdminPage({ metrics, retailers, scores, onUpdateScore, o
                 </button>
               )}
               <div className="w-px h-4 bg-border mx-1" />
-              <button 
+              {/* <button 
                 onClick={onResetData}
                 className="text-xs font-bold text-red-500 hover:underline flex items-center gap-1"
               >
                 <Trash2 size={14} />
                 Reset Data
-              </button>
+              </button> */}
             </div>
           </div>
           <div className="overflow-x-auto">
