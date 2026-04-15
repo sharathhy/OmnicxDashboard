@@ -325,7 +325,7 @@ export default function App() {
                 
                 <main 
                   className={cn(
-                    "flex-1 p-4 md:p-8 transition-all duration-300 overflow-x-hidden",
+                    "flex-1 p-4 md:p-6 transition-all duration-300 overflow-x-hidden",
                     isSidebarExpanded ? "md:ml-60 ml-0" : "md:ml-16 ml-0"
                   )}
                 >

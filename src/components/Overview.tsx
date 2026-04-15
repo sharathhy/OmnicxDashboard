@@ -63,15 +63,15 @@ export default function Overview({
             {index === 0 && (
               <td
                 rowSpan={sectionMetrics.length + 1}
-                className="p-4 font-bold text-sm bg-muted/30 border-r align-top sticky left-0 z-10"
+                className="p-4 font-bold text-xs bg-muted/30 border-r align-top sticky left-0 z-10"
               >
                 {title}
               </td>
             )}
-            <td className="p-4 text-sm font-medium">{metric.category}</td>
-            <td className="p-4 text-sm text-muted-foreground">{metric.description}</td>
-            <td className="p-4 text-sm font-mono text-muted-foreground">
-              {isEditable ? (
+            <td className="p-4 text-xs font-medium">{metric.category}</td>
+            <td className="p-4 text-xs text-muted-foreground">{metric.description}</td>
+            <td className="p-4 text-xs font-mono text-muted-foreground">
+              {isEditable  ? (
                 <input
                   type="text"
                   value={metric.criteria}
@@ -103,11 +103,11 @@ export default function Overview({
           </tr>
         ))}
         <tr className="border-b bg-primary/5">
-          <td className="p-4 text-sm font-bold flex items-center gap-2">
+          <td className="p-4 text-xs font-bold flex items-center gap-2">
             <Sparkles size={16} className="text-primary" />
             AI Insights
           </td>
-          <td colSpan={2} className="p-4 text-sm text-muted-foreground italic">
+          <td colSpan={2} className="p-4 text-xs text-muted-foreground italic">
             AI-generated performance analysis and recommendations
           </td>
           {filteredRetailers.map(retailer => (
@@ -138,7 +138,7 @@ export default function Overview({
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-stretch">
        <div
-  className="p-4 bg-card border rounded-2xl flex items-center justify-around shadow-md cursor-pointer overflow-hidden
+  className="p-2 bg-card border rounded-xl flex items-center justify-around shadow-md cursor-pointer overflow-hidden
   transform-gpu will-change-transform origin-center
   transition-all duration-200 ease-out
   group-hover:scale-[1.02]
@@ -174,7 +174,7 @@ export default function Overview({
 </div>
        
 
-        <div className="p-4 bg-card border rounded-2xl  space-y-2  shadow-md cursor-pointer overflow-hidden
+        <div className="p-2 bg-card border rounded-xl  space-y-2  shadow-md cursor-pointer overflow-hidden
           transform-gpu will-change-transform origin-center
           transition-all duration-200 ease-out
           group-hover:scale-[1.02]
@@ -230,7 +230,7 @@ export default function Overview({
           </div>
         </div>
 
-        <div className="p-4 bg-card border rounded-2xl flex flex-col justify-center items-center text-center space-y-3  shadow-md cursor-pointer overflow-hidden
+        <div className="p-2 bg-card border rounded-xl flex flex-col justify-center items-center text-center space-y-3  shadow-md cursor-pointer overflow-hidden
           transform-gpu will-change-transform origin-center
           transition-all duration-200 ease-out
           group-hover:scale-[1.02]
@@ -242,7 +242,7 @@ export default function Overview({
           </div>
           <button
             onClick={onOpenOverallAiInsights}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 group text-sm"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 group text-sm"
           >
             <Sparkles size={16} className="group-hover:rotate-12 transition-transform" />
             Overall AI Insights
@@ -254,12 +254,12 @@ export default function Overview({
       <table className="w-full border-collapse min-w-250">
         <thead>
           <tr className="bg-muted/50 border-b">
-            <th className="p-4 text-left text-[12px] font-bold uppercase tracking-wider sticky left-0 z-20 bg-muted/50 border-r">ONLINE/IN-STORE</th>
-            <th className="p-4 text-left text-[12px] font-bold uppercase tracking-wider">CATEGORY</th>
-            <th className="p-4 text-left text-[12px] font-bold uppercase tracking-wider">DESCRIPTION</th>
-            <th className="p-4 text-left text-[12px] font-bold uppercase tracking-wider border-r">CRITERIA</th>
+            <th className="p-4 text-left text-[11px] font-bold uppercase tracking-wider sticky left-0 z-20 bg-muted/50 border-r">ONLINE/IN-STORE</th>
+            <th className="p-4 text-left text-[11px] font-bold uppercase tracking-wider">CATEGORY</th>
+            <th className="p-4 text-left text-[11px] font-bold uppercase tracking-wider">DESCRIPTION</th>
+            <th className="p-4 text-left text-[11px] font-bold uppercase tracking-wider border-r">CRITERIA</th>
             {filteredRetailers.map(retailer => (
-              <th key={retailer.id} className="p-4 text-center text-[12px] font-bold uppercase tracking-wider min-w-30">
+              <th key={retailer.id} className="p-4 text-center text-[11px] font-bold uppercase tracking-wider min-w-30">
                 <div className="flex flex-col items-center gap-2">
                   {retailer.logoUrl && (
                     <img src={retailer.logoUrl} alt={retailer.name} className="h-6 object-contain" referrerPolicy="no-referrer" />
@@ -336,7 +336,7 @@ function ScoreBubble({ scoreData, metric, onClick, isEditable }: { scoreData: Sc
       <button
         onClick={onClick}
         className={cn(
-          "w-5 h-5 rounded-full transition-all shadow-sm flex items-center justify-center group hover:scale-125", 
+          "w-4 h-4 rounded-full transition-all shadow-sm flex items-center justify-center group hover:scale-125", 
           getBubbleColor(scoreData.score)
         )}
         onMouseEnter={() => setShowTooltip(true)}
@@ -344,7 +344,7 @@ function ScoreBubble({ scoreData, metric, onClick, isEditable }: { scoreData: Sc
       >
         <Edit3 size={10} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
       </button>
-      <span className="text-sm font-medium">{displayValue}</span>
+      <span className="text-xs font-medium">{displayValue}</span>
 
       <AnimatePresence>
         {showTooltip && (
@@ -477,8 +477,22 @@ function EditScoreModal({ score, metric, onClose, onSave, isEditable }: { score:
                   disabled={!isEditable}
                   className="flex-1 accent-primary"
                 />
+
+                 {/* Text Input */}
+    <input
+      type="text"
+      min="0"
+      max="100"
+      value={value}
+      onChange={(e) =>
+        setValue(Math.min(100, Math.max(0, Number(e.target.value))))
+      }
+      disabled={!isEditable}
+      className="w-14 px-2 py-1 border rounded-md text-center text-sm font-semibold"
+    />
+
                 <span className={cn(
-                  "w-12 h-12 rounded-xl flex items-center justify-center font-black text-lg shadow-inner",
+                  "w-12 h-8 rounded-md flex items-center justify-center font-black text-xs shadow-inner",
                   getBubbleColor(value),
                   "text-white"
                 )}>
