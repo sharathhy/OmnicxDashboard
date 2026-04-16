@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Metric, Retailer, ScoreData } from '../types';
 import { Plus, Save, Trash2, Edit2, Check, X, ArrowLeft, Calendar } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { getScoreStatus } from '../constants';
 import Overview from './Overview';
 
 interface AdminPageProps {
@@ -339,8 +340,8 @@ export default function AdminPage({ metrics, retailers, scores, onUpdateScore, o
                         ) : (
                           <span className={cn(
                             "px-2 py-1 rounded-full text-xs font-bold",
-                            score.score >= 80 ? "bg-green-100 text-green-700" :
-                            score.score >= 60 ? "bg-yellow-100 text-yellow-700" :
+                            getScoreStatus(score.score, metric?.criteria) === 'good' ? "bg-green-100 text-green-700" :
+                            getScoreStatus(score.score, metric?.criteria) === 'average' ? "bg-yellow-100 text-yellow-700" :
                             "bg-red-100 text-red-700"
                           )}>
                             {metric?.criteria === 'Yes = Green' 

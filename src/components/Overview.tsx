@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Metric, Retailer, ScoreData } from '../types';
-import { getBubbleColor } from '../constants';
+import { getBubbleColor, getScoreStatus } from '../constants';
 import { motion, AnimatePresence } from 'motion/react';
 import { Info, Sparkles, X, Save, MessageSquare, Edit3 } from 'lucide-react';
 import { cn } from '../lib/utils';
@@ -125,9 +125,18 @@ export default function Overview({
     );
   };
 
-  const greenCount = scores.filter(s => s.score >= 80).length;
-  const yellowCount = scores.filter(s => s.score >= 60 && s.score < 80).length;
-  const redCount = scores.filter(s => s.score < 60).length;
+  const greenCount = scores.filter(s => {
+    const metric = metrics.find(m => m.id === s.metricId);
+    return getScoreStatus(s.score, metric?.criteria) === 'good';
+  }).length;
+  const yellowCount = scores.filter(s => {
+    const metric = metrics.find(m => m.id === s.metricId);
+    return getScoreStatus(s.score, metric?.criteria) === 'average';
+  }).length;
+  const redCount = scores.filter(s => {
+    const metric = metrics.find(m => m.id === s.metricId);
+    return getScoreStatus(s.score, metric?.criteria) === 'critical';
+  }).length;
   const totalCount = scores.length || 1;
 
   const greenPct = (greenCount / totalCount) * 100;
@@ -336,8 +345,8 @@ function ScoreBubble({ scoreData, metric, onClick, isEditable }: { scoreData: Sc
       <button
         onClick={onClick}
         className={cn(
-          "w-4 h-4 rounded-full transition-all shadow-sm flex items-center justify-center group hover:scale-125", 
-          getBubbleColor(scoreData.score)
+          "w-5 h-5 rounded-full transition-all shadow-sm flex items-center justify-center group hover:scale-125", 
+          getBubbleColor(scoreData.score, metric.criteria)
         )}
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
@@ -492,8 +501,8 @@ function EditScoreModal({ score, metric, onClose, onSave, isEditable }: { score:
     />
 
                 <span className={cn(
-                  "w-12 h-8 rounded-md flex items-center justify-center font-black text-xs shadow-inner",
-                  getBubbleColor(value),
+                  "w-12 h-12 rounded-xl flex items-center justify-center font-black text-lg shadow-inner",
+                  getBubbleColor(value, metric.criteria),
                   "text-white"
                 )}>
                   {value}

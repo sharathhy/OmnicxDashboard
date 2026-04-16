@@ -52,8 +52,45 @@ export const THRESHOLDS = {
   AVERAGE: 60,
 };
 
-export function getBubbleColor(score: number) {
-  if (score >= THRESHOLDS.GOOD) return 'bg-green-500';
-  if (score >= THRESHOLDS.AVERAGE) return 'bg-yellow-500';
-  return 'bg-red-500';
+export type ScoreStatus = 'good' | 'average' | 'critical';
+
+export function getScoreStatus(score: number, criteria: string = ''): ScoreStatus {
+  if (criteria === 'Yes = Green') {
+    return score >= 80 ? 'good' : 'critical';
+  }
+
+  // Handle >X% or >X
+  const greaterThanMatch = criteria.match(/>(\d+(\.\d+)?)/);
+  if (greaterThanMatch) {
+    const thresholdValue = parseFloat(greaterThanMatch[1]);
+    // If it's a rating (like 4.2), convert to 0-100 scale
+    const threshold = (thresholdValue <= 5 && !criteria.includes('%')) ? thresholdValue * 20 : thresholdValue;
+    
+    if (score > threshold) return 'good';
+    if (score >= threshold - 20) return 'average';
+    return 'critical';
+  }
+
+  // Handle range X-Y = Green
+  const rangeMatch = criteria.match(/(\d+)-(\d+)/);
+  if (rangeMatch) {
+    const min = parseFloat(rangeMatch[1]);
+    if (score >= min) return 'good';
+    if (score >= min - 20) return 'average';
+    return 'critical';
+  }
+
+  // Fallback to defaults
+  if (score >= THRESHOLDS.GOOD) return 'good';
+  if (score >= THRESHOLDS.AVERAGE) return 'average';
+  return 'critical';
+}
+
+export function getBubbleColor(score: number, criteria: string = '') {
+  const status = getScoreStatus(score, criteria);
+  switch (status) {
+    case 'good': return 'bg-green-500';
+    case 'average': return 'bg-yellow-500';
+    case 'critical': return 'bg-red-500';
+  }
 }
